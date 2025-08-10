@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tracker de Jejum Intermitente – 21 Dias</title>
+  <style>
+    @page { size: A4; margin: 15mm; }
+    @media print {
+      body { margin: 0; }
+      .page-break { page-break-after: always; }
+      .no-break { page-break-inside: avoid; }
+      .no-print { display: none !important; }
+    }
+
+    body { font-family: Arial, sans-serif; line-height: 1.3; color: #333; background: #fff; font-size: 12px; }
+    .page { min-height: 260mm; padding: 15mm; box-sizing: border-box; }
+
+    h1 { color: #2c5aa0; text-align: center; margin-bottom: 15px; font-size: 20px; border-bottom: 3px solid #ff6b35; padding-bottom: 8px; }
+    h2 { color: #ff6b35; margin-top: 20px; margin-bottom: 12px; font-size: 16px; }
+    h3 { color: #2c5aa0; margin-top: 15px; margin-bottom: 8px; font-size: 13px; }
+
+    .goal-box { background: #e8f4f8; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 4px solid #2c5aa0; font-size: 11px; }
+
+    .checklist { list-style: none; padding: 0; margin: 8px 0; }
+    .checklist li { margin: 6px 0; font-size: 11px; }
+
+    /* Checkbox editável (marca X) */
+    .checkbox { display: inline-flex; width: 14px; height: 14px; border: 1px solid #333; margin-right: 6px; vertical-align: middle; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+    .checkbox::after { content: 'X'; font-weight: bold; font-size: 12px; line-height: 1; opacity: 0; transition: opacity .12s ease; }
+    .checkbox[data-checked="true"]::after { opacity: 1; }
+    .checkbox:focus { outline: 2px solid #2c5aa0; outline-offset: 1px; }
+
+    .water-track { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; }
+    .water-cup { width: 16px; height: 16px; border: 1px solid #4a90e2; display: inline-block; }
+
+    .line-input { border: none; border-bottom: 1px solid #999; padding: 1px 4px; margin: 0 3px; min-width: 60px; font-size: 11px; background: transparent; }
+    .line-input.wide { min-width: 160px; }
+
+    .notes-area { border: 1px solid #ccc; min-height: 50px; padding: 6px; margin: 8px 0; background: #fafafa; }
+    .notes-area[contenteditable="true"]:focus { outline: none; border-color: #2c5aa0; box-shadow: 0 0 0 2px rgba(44, 90, 160, 0.1); background: #fff; }
+
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+
+    .celebration { background: #fff3cd; border: 1px solid #ffeaa7; padding: 12px; border-radius: 6px; text-align: center; margin: 15px 0; font-size: 11px; }
+
+    .date-line { text-align: right; margin-bottom: 15px; font-size: 11px; }
+
+    @media screen { .page { border: 1px solid #ddd; margin: 20px auto; max-width: 210mm; box-shadow: 0 2px 10px rgba(0,0,0,0.1); } }
+
+    /* Botões */
+    .btn { display: inline-block; border: 0; border-radius: 6px; padding: 8px 12px; font-size: 12px; cursor: pointer; margin-right: 8px; margin-bottom: 8px; }
+    .btn-wa { background: #25D366; color: #fff; }
+    .btn-ghost { background: #eef3ff; color: #2c5aa0; }
+    .muted { color: #555; font-size: 11px; }
+
+    /* Toolbar de dados (não imprime) */
+    .data-toolbar { border:1px solid #e5e7eb; background:#f9fafb; padding:10px 12px; border-radius:8px; max-width:210mm; margin:10px auto 0; box-shadow:0 1px 3px rgba(0,0,0,.04) }
+    .data-toolbar .btn{ margin-right:6px; margin-bottom:6px }
+    .data-toolbar .muted{ font-size:11px }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de dados / backups (não imprime) -->
+  <div class="no-print data-toolbar">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+      <div><strong>💾 Seus dados ficam salvos neste navegador.</strong> <span id="saveStatus" class="muted" aria-live="polite">(salvo)</span></div>
+      <div>
+        <button class="btn btn-ghost" id="exportJSONBtn" type="button">Exportar backup (.json)</button>
+        <button class="btn btn-ghost" id="importJSONBtn" type="button">Importar backup</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+        <button class="btn btn-ghost" id="downloadHTMLBtn" type="button">Baixar página preenchida (.html)</button>
+        <button class="btn btn-ghost" id="clearDataBtn" type="button">Limpar dados</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PÁGINA INICIAL -->
+  <div class="page">
+    <h1>🥗 TRACKER DE JEJUM INTERMITENTE - 21 DIAS</h1>
+
+    <h2>📊 MEDIDAS E OBJETIVOS INICIAIS</h2>
+
+    <div class="date-line">
+      <strong>Data de Início:</strong>
+      <input type="text" class="line-input" id="startDay" placeholder="dd"> /
+      <input type="text" class="line-input" id="startMonth" placeholder="mm"> /
+      <input type="text" class="line-input" id="startYear" placeholder="aaaa">
+    </div>
+
+    <h3>📏 Medidas Iniciais</h3>
+    <div class="stats-grid">
+      <div>
+        <strong>Peso:</strong> <input type="text" class="line-input" id="pesoInicial"> kg<br><br>
+        <strong>Cintura:</strong> <input type="text" class="line-input" id="cinturaInicial"> cm<br><br>
+        <strong>Quadril:</strong> <input type="text" class="line-input" id="quadrilInicial"> cm
+      </div>
+      <div>
+        <strong>Braço:</strong> <input type="text" class="line-input" id="bracoInicial"> cm<br><br>
+        <strong>Coxa:</strong> <input type="text" class="line-input" id="coxaInicial"> cm<br><br>
+        <strong>Outras:</strong> <input type="text" class="line-input" id="outrasIniciais"> cm
+      </div>
+    </div>
+
+    <h3>🎯 Meus Objetivos para os 21 Dias</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true" id="objetivosIniciais"></div>
+
+    <h3>💪 Minhas Motivações</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true" id="motivacoesIniciais"></div>
+
+    <h3>📝 Como me sinto antes de começar</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true" id="sentimentoInicial"></div>
+
+    <h3>📸 Checklist de Fotos Iniciais</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Foto frontal tirada</li>
+      <li><span class="checkbox"></span> Foto lateral tirada</li>
+      <li><span class="checkbox"></span> Foto posterior tirada</li>
+    </ul>
+
+    <!-- Botão único de WhatsApp após as fotos -->
+    <div class="no-print" style="margin-top:8px;">
+      <button type="button" class="btn btn-wa" id="sendWhatsQuickBtn">Enviar medidas e fotos via WhatsApp</button>
+      <div class="muted">Ao abrir o WhatsApp, anexe as 3 fotos (frente, lateral e costas) e envie.</div>
+    </div>
+
+    <h3>💧 Água Consumida (foco extra!)</h3>
+    <div class="water-track">
+      <span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span>
+      <span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span>
+      <span class="water-cup"></span><span class="water-cup"></span>
+    </div>
+
+    <h3>😊 Como me senti hoje</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 1 -->
+  <div class="page">
+    <h1>☀️ DIA 1: Boas-vindas e Primeiros Passos</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Iniciar sua jornada, entender o funcionamento do curso e preparar-se para o sucesso.</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Assisti "Bem-vinda"</li>
+      <li><span class="checkbox"></span> Assisti "Como tirar fotos e medidas"</li>
+      <li><span class="checkbox"></span> Assisti "Como vai funcionar o concurso mensal"</li>
+      <li><span class="checkbox"></span> Assisti "Explicando o uso do Tracker"</li>
+      <li><span class="checkbox"></span> Tirei minhas fotos e medidas iniciais</li>
+      <li><span class="checkbox"></span> Defini meus objetivos e motivação no tracker</li>
+    </ul>
+    <h3>💧 Água consumida: <input type="text" class="line-input"> L</h3>
+    <h3>📝 Notas e Reflexões do Dia</h3>
+    <div class="notes-area" style="min-height: 80px;" contenteditable="true"></div>
+    <h3>😊 Como me senti hoje</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>🌟 Conquista do Dia</h3>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 2 -->
+  <div class="page">
+    <h1>☀️ DIA 2: Dominando as Regras e a Tata</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Aprender as regras fundamentais da alimentação e conhecer sua assistente, a Tata.</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Assisti todas as aulas do Módulo "Regras da sua alimentação" (9 aulas)</li>
+      <li><span class="checkbox"></span> Assisti "Como usar a Tata" e "Combinações com a Tata"</li>
+      <li><span class="checkbox"></span> Assisti "Como colocar a Tata no Android / iPhone"</li>
+      <li><span class="checkbox"></span> Calculei minha meta de água</li>
+    </ul>
+    <h3>💧 Meta de Água: <input type="text" class="line-input"> L | Consumido: <input type="text" class="line-input"> L</h3>
+    <h3>📱 Status da Tata</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Configurada no celular</li>
+      <li><span class="checkbox"></span> Primeiro uso realizado</li>
+      <li><span class="checkbox"></span> Entendi como funciona</li>
+    </ul>
+    <h3>📝 Principais Aprendizados sobre Alimentação</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+    <h3>🤖 Experiência com a Tata</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>😊 Como me senti hoje</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 3 -->
+  <div class="page">
+    <h1>☀️ DIA 3: Aprofundando na Tata e no Jejum</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Entender o poder da Tata e os conceitos essenciais do jejum intermitente.</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Assisti o restante do Módulo "Tata a Nutri com você"</li>
+      <li><span class="checkbox"></span> Assisti todas as aulas do Módulo "O que é Jejum intermitente?" (7 aulas)</li>
+      <li><span class="checkbox"></span> Refleti: "Quem não deve praticar?" - Confirmei que o jejum é seguro para mim</li>
+    </ul>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+<p><strong>Quanto faltou:</strong> <input type="text" class="line-input" placeholder="Ex.: 200 ml"></p>
+    <h3>🧠 Conceitos Importantes sobre Jejum Intermitente</h3>
+    <div class="notes-area" style="min-height: 80px;" contenteditable="true"></div>
+    <h3>🤔 Reflexão sobre Segurança</h3>
+    <p><strong>O jejum é seguro para mim?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim, confirmado</li>
+      <li><span class="checkbox"></span> Tenho dúvidas (anotar abaixo)</li>
+    </ul>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>💡 Insights do Dia</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>😊 Como me senti hoje</h3>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 4 -->
+  <div class="page">
+    <h1>☀️ DIA 4: Jejum na Prática e Manutenção</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Aprender como aplicar o jejum no dia a dia e como torná-lo um hábito para a vida.</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Assisti todas as aulas do Módulo "Jejum na prática" (6 aulas)</li>
+      <li><span class="checkbox"></span> Assisti todas as aulas do Módulo "Manutenção do Jejum" (2 aulas)</li>
+      <li><span class="checkbox"></span> Usei a Tata para planejar minhas refeições de amanhã</li>
+    </ul>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+<p><strong>Quanto faltou:</strong> <input type="text" class="line-input" placeholder="Ex.: 200 ml"></p>
+    <h3>📝 Estratégias Práticas Aprendidas</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+    <h3>🍽️ Planejamento para Amanhã (Primeiro Jejum)</h3>
+    <p><strong>Última refeição hoje:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Primeira refeição amanhã:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Total de jejum planejado:</strong> <input type="text" class="line-input"> horas</p>
+    <h3>🥘 Menu Planejado para Amanhã</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>💭 Estratégia para Lidar com a Fome</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>😊 Como me senti hoje</h3>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 5 -->
+  <div class="page">
+    <h1>☀️ DIA 5: Revisão e Preparação</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Revisar os conceitos chave e se preparar para iniciar a prática do jejum amanhã.</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Revisei minhas anotações dos módulos</li>
+      <li><span class="checkbox"></span> Assisti novamente "Jejum na prática: como começar?"</li>
+      <li><span class="checkbox"></span> Assisti a "Aula ao vivo Jejum (18.06.24)"</li>
+      <li><span class="checkbox"></span> Planejei meu primeiro jejum de 12 horas para amanhã</li>
+      <li><span class="checkbox"></span> 🎉 Celebração: Completei a maratona de aulas!</li>
+    </ul>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+<p><strong>Quanto faltou:</strong> <input type="text" class="line-input" placeholder="Ex.: 200 ml"></p>
+    <h3>📝 Principais Pontos da Revisão</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+    <h3>⏰ Planejamento Detalhado do Primeiro Jejum</h3>
+    <p><strong>Última refeição hoje:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Primeira refeição amanhã:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Meta de jejum:</strong> 12 horas</p>
+    <h3>🛡️ Estratégias de Apoio</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <div class="celebration">
+      <h3>🎉 PARABÉNS!</h3>
+      <p>Você completou toda a parte teórica! Amanhã começa a prática!</p>
+      <div class="notes-area" style="min-height: 30px;" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 6 -->
+  <div class="page">
+    <h1>☀️ DIA 6: Meu Primeiro Jejum de 12 Horas</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Realizar seu primeiro jejum de 12 horas com consciência e observando seu corpo.<br><strong>⏰ Meta de Jejum:</strong> 12 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Fiz meu jejum de 12 horas</li>
+      <li><span class="checkbox"></span> Observei os sinais do meu corpo</li>
+      <li><span class="checkbox"></span> Quebrei o jejum de forma consciente</li>
+      <li><span class="checkbox"></span> Usei a Tata para me guiar</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h (dia <input type="text" class="line-input">)</p>
+    <p><strong>Fim:</strong> <input type="text" class="line-input"> h (dia <input type="text" class="line-input">)</p>
+    <p><strong>Duração total:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Consegui completar as 12h?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim, completei!</li>
+      <li><span class="checkbox"></span> Não, consegui <input type="text" class="line-input"> horas</li>
+    </ul>
+    <h3>📈 Observações do Corpo</h3>
+    <p><strong>Níveis de fome (1-10):</strong> Manhã: <input type="text" class="line-input"> | Tarde: <input type="text" class="line-input"> | Noite: <input type="text" class="line-input"></p>
+    <p><strong>Níveis de energia (1-10):</strong> Manhã: <input type="text" class="line-input"> | Tarde: <input type="text" class="line-input"> | Noite: <input type="text" class="line-input"></p>
+    <h3>🍽️ Como Quebrei o Jejum</h3>
+    <p><strong>Primeira refeição:</strong> <input type="text" class="line-input" style="width: 200px;"></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+<p><strong>Quanto faltou:</strong> <input type="text" class="line-input" placeholder="Ex.: 200 ml"></p>
+    <h3>😊 Reflexão do Primeiro Jejum</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 7 -->
+  <div class="page">
+    <h1>☀️ DIA 7: Consolidando 12h e Avaliação Semanal</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Repetir o jejum de 12h e fazer o balanço da primeira semana.<br><strong>⏰ Meta de Jejum:</strong> 12 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive o jejum de 12h</li>
+      <li><span class="checkbox"></span> Fiz o balanço da semana</li>
+      <li><span class="checkbox"></span> Celebrei minhas conquistas!</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completado?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não (<input type="text" class="line-input"> h)</li>
+    </ul>
+    <h3>📝 Balanço da Semana 1</h3>
+    <p><strong>Principais conquistas:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <p><strong>Maiores desafios:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <p><strong>O que aprendi sobre mim:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>🔄 Mudanças que Notei</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mais energia</li>
+      <li><span class="checkbox"></span> Melhor sono</li>
+      <li><span class="checkbox"></span> Menos inchaço</li>
+      <li><span class="checkbox"></span> Mais foco</li>
+      <li><span class="checkbox"></span> Humor melhor</li>
+      <li><span class="checkbox"></span> Outras: <input type="text" class="line-input" style="width: 150px;"></li>
+    </ul>
+    <h3>💧 Água Consumida</h3>
+    <div class="water-track"><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span><span class="water-cup"></span></div>
+    <div class="celebration">
+      <h3>🎉 PRIMEIRA SEMANA COMPLETA!</h3>
+      <div class="notes-area" style="min-height: 30px;" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 8 -->
+  <div class="page">
+    <h1>☀️ DIA 8: Rumo às 14 Horas</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Experimentar e se adaptar ao jejum de 14 horas.<br><strong>⏰ Meta de Jejum:</strong> 14 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Tentei o jejum de 14 horas</li>
+      <li><span class="checkbox"></span> Mantive a hidratação em foco</li>
+      <li><span class="checkbox"></span> Observei como meu corpo reagiu ao aumento do tempo</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completei as 14h?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim, consegui!</li>
+      <li><span class="checkbox"></span> Não, consegui <input type="text" class="line-input"> h</li>
+    </ul>
+    <h3>📝 Adaptação às 14h</h3>
+    <p><strong>Diferenças em relação às 12h:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Estratégias que funcionaram:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <p><strong>Momentos mais difíceis:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>😊 Como me senti hoje</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 9 -->
+  <div class="page">
+    <h1>☀️ DIA 9: Consolidando 14 Horas</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Experimentar e se adaptar ao jejum de 14 horas.<br><strong>⏰ Meta de Jejum:</strong> 14 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Tentei o jejum de 14 horas</li>
+      <li><span class="checkbox"></span> Mantive a hidratação em foco</li>
+      <li><span class="checkbox"></span> Observei como meu corpo reagiu ao aumento do tempo</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completei as 14h?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim, consegui!</li>
+      <li><span class="checkbox"></span> Não, consegui <input type="text" class="line-input"> h</li>
+    </ul>
+    <h3>📝 Evolução no Segundo Dia de 14h</h3>
+    <p><strong>Mais fácil que ontem?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não</li>
+      <li><span class="checkbox"></span> Igual</li>
+    </ul>
+    <p><strong>Ajustes que fiz:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Sinais do corpo:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>😊 Confiança crescendo</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 10 -->
+  <div class="page">
+    <h1>☀️ DIA 10: Dominando o Jejum 16:8</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Introduzir, praticar e consolidar o protocolo de 16 horas de jejum.<br><strong>⏰ Meta de Jejum:</strong> 16 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Consegui meu primeiro jejum de 16h!</li>
+      <li><span class="checkbox"></span> Aprendi a quebrar o jejum de 16h corretamente</li>
+      <li><span class="checkbox"></span> Entendi a flexibilidade (refeições livres)</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completei as 16h?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim, consegui!</li>
+      <li><span class="checkbox"></span> Não, consegui <input type="text" class="line-input"> h</li>
+    </ul>
+    <h3>🔥 Primeira Experiência com 16h</h3>
+    <p><strong>Como me senti durante as últimas 2 horas (14h-16h):</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>🍽️ Janela Alimentar (8 horas)</h3>
+    <p><strong>Primeira refeição:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Última refeição:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Refeições realizadas:</strong> <input type="text" class="line-input" style="width: 200px;"></p>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <div class="celebration">
+      <h3>🎉 CONQUISTA DO 16:8!</h3>
+      <p>Você alcançou o protocolo mais popular do jejum intermitente!</p>
+      <div class="notes-area" style="min-height: 30px;" contenteditable="true"></div>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 11 -->
+  <div class="page">
+    <h1>☀️ DIA 11: Consolidando o 16:8</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Consolidar o protocolo de 16 horas de jejum.<br><strong>⏰ Meta de Jejum:</strong> 16 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Consegui meu jejum de 16h</li>
+      <li><span class="checkbox"></span> Consolidei a rotina de 16h</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completado?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não</li>
+    </ul>
+    <h3>📝 Consolidando a Rotina</h3>
+    <p><strong>Segundo dia de 16h foi:</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mais fácil</li>
+      <li><span class="checkbox"></span> Igual</li>
+      <li><span class="checkbox"></span> Mais difícil</li>
+    </ul>
+    <p><strong>Adaptações feitas:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Rotina se encaixando no dia:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>🍽️ Janela Alimentar</h3>
+    <p><strong>Refeições:</strong> <input type="text" class="line-input">h | <input type="text" class="line-input">h | <input type="text" class="line-input">h (se aplicável)</p>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>😊 Reflexão</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 12 -->
+  <div class="page">
+    <h1>☀️ DIA 12: Fortalecendo o 16:8</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Continuar consolidando o protocolo de 16 horas de jejum.<br><strong>⏰ Meta de Jejum:</strong> 16 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Consegui meu jejum de 16h</li>
+      <li><span class="checkbox"></span> Consolidei a rotina de 16h</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completado?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não</li>
+    </ul>
+    <h3>📝 Terceiro Dia de 16h</h3>
+    <p><strong>Está ficando natural?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Quase</li>
+      <li><span class="checkbox"></span> Ainda difícil</li>
+    </ul>
+    <p><strong>Benefícios percebidos até agora:</strong></p>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+    <h3>🍽️ Qualidade da Alimentação</h3>
+    <p><strong>Estou comendo melhor na janela?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não</li>
+    </ul>
+    <p><strong>Ajustes necessários:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>💪 Fortalecendo o hábito</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 13 -->
+  <div class="page">
+    <h1>☀️ DIA 13: Dominando o 16:8</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Continuar dominando o protocolo de 16 horas de jejum.<br><strong>⏰ Meta de Jejum:</strong> 16 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Consegui meu jejum de 16h</li>
+      <li><span class="checkbox"></span> Consolidei a rotina de 16h</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completado?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não</li>
+    </ul>
+    <h3>📝 Quarto Dia Consecutivo</h3>
+    <p><strong>Confiança no protocolo (1-10):</strong> <input type="text" class="line-input"></p>
+    <p><strong>Maior aprendizado dessa semana:</strong></p>
+    <div class="notes-area" style="min-height: 80px;" contenteditable="true"></div>
+    <h3>🍽️ Padrão Alimentar</h3>
+    <p><strong>Meu horário preferido de janela:</strong> <input type="text" class="line-input"> h às <input type="text" class="line-input"> h</p>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>😊 Como me sinto</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 14 -->
+  <div class="page">
+    <h1>☀️ DIA 14: Avaliação da Semana 2</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Manter o jejum de 16h e avaliar a segunda semana.<br><strong>⏰ Meta de Jejum:</strong> 16 horas</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Consegui meu jejum de 16h</li>
+      <li><span class="checkbox"></span> Fiz a avaliação da Semana 2</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Completado?</strong></p>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Sim</li>
+      <li><span class="checkbox"></span> Não</li>
+    </ul>
+    <h3>📈 Avaliação da Semana 2</h3>
+    <p><strong>Dias que consegui 16h nesta semana:</strong> <input type="text" class="line-input"> /7</p>
+    <p><strong>Maior conquista da semana:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Maior desafio da semana:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>🔄 Mudanças Físicas Notadas</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Perda de peso</li>
+      <li><span class="checkbox"></span> Redução de medidas</li>
+      <li><span class="checkbox"></span> Mais energia</li>
+      <li><span class="checkbox"></span> Melhor sono</li>
+      <li><span class="checkbox"></span> Melhor digestão</li>
+      <li><span class="checkbox"></span> Outras: <input type="text" class="line-input" style="width: 150px;"></li>
+    </ul>
+
+    <h3>💭 Como me sinto em relação ao jejum agora</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+
+    <div class="celebration"><h3>🎉 FIM DA SEMANA 2!</h3><p>Você está dominando o jejum intermitente!</p></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 15 -->
+  <div class="page">
+    <h1>☀️ DIA 15: Personalização e Autonomia</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Manter o jejum de 16h+ e personalizar a rotina.<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Usei os recursos avançados da Tata</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <p><strong>Meta:</strong> <input type="text" class="line-input"> h | <strong>Alcançado:</strong></p>
+    <ul class="checklist"><li><span class="checkbox"></span> Sim</li><li><span class="checkbox"></span> Não</li></ul>
+    <h3>📝 Personalizando Minha Rotina</h3>
+    <p><strong>Horários ideais para mim:</strong></p>
+    <p>Jejum: <input type="text" class="line-input"> h às <input type="text" class="line-input"> h</p>
+    <p>Janela: <input type="text" class="line-input"> h às <input type="text" class="line-input"> h</p>
+    <p><strong>Recursos da Tata que mais uso:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Adaptações que fiz:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>🚀 Evoluindo</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 16 -->
+  <div class="page">
+    <h1>☀️ DIA 16: Recursos Avançados</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Continuar personalizando e usar recursos avançados.<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Usei os recursos avançados da Tata</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <h3>📝 Explorando Recursos Avançados</h3>
+    <p><strong>Novo recurso testado hoje:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Como me ajudou:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>📈 Progresso Pessoal</h3>
+    <p><strong>Facilidade atual (1-10):</strong> <input type="text" class="line-input"></p>
+    <p><strong>Confiança atual (1-10):</strong> <input type="text" class="line-input"></p>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>💡 Descobertas</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 17 -->
+  <div class="page">
+    <h1>☀️ DIA 17: Desafios Sociais</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Manter o jejum e enfrentar desafios sociais.<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Enfrentei um desafio social</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <h3>📝 Desafio Social Enfrentado</h3>
+    <p><strong>Situação:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Como lidei:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Resultado:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <p><strong>Aprendizado:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>💪 Superando desafios</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 18 -->
+  <div class="page">
+    <h1>☀️ DIA 18: Experimentação</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Manter o protocolo e experimentar jejum mais longo (opcional).<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Experimentei um jejum mais longo (opcional)</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <h3>📝 Experimentação</h3>
+    <p><strong>Tentei jejum mais longo?</strong></p>
+    <ul class="checklist"><li><span class="checkbox"></span> Sim</li><li><span class="checkbox"></span> Não</li></ul>
+    <p><strong>Se sim, quantas horas?</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Como foi a experiência:</strong></p>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+    <p><strong>Se não, por que não:</strong></p>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>🔬 Observações Científicas</h3>
+    <p><strong>Diferenças que notei:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>🔬 Experimentando</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- ==================== DIAS 19 a 21 (mantêm padrão do Dia 18) ==================== -->
+
+  <!-- DIA 19 -->
+  <div class="page">
+    <h1>☀️ DIA 19: Mantendo o Ritmo (16h+)</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Manter o protocolo e seguir experimentando com consciência.<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Experimentei um ajuste (horário, bebida sem caloria, descanso)</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <h3>📝 Experimentação de Hoje</h3>
+    <p><strong>O que testei:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <p><strong>Como me senti:</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>🔬 Observações</h3>
+    <p><strong>Diferenças percebidas (fome, energia, foco):</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>🧭 Preparação para os próximos dias</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 20 -->
+  <div class="page">
+    <h1>☀️ DIA 20: Consistência Inteligente (16h+)</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Manter o protocolo 16h+ e refinar estratégias para a vida real.<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Ajustei algo na rotina (sono, treino, horários)</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <h3>📝 O que funcionou hoje</h3>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+    <h3>⚠️ Pontos de atenção</h3>
+    <div class="notes-area" style="min-height: 50px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <h3>🧭 Preparação para o Dia 21</h3>
+    <p><strong>Plano de amanhã (horários e estratégia de quebra):</strong></p>
+    <div class="notes-area" style="min-height: 60px;" contenteditable="true"></div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- DIA 21 -->
+  <div class="page">
+    <h1>☀️ DIA 21: Fechamento da Prática (16h+)</h1>
+    <div class="date-line"><strong>Data:</strong> <input type="text" class="line-input"> / <input type="text" class="line-input"> / <input type="text" class="line-input"></div>
+    <div class="goal-box"><strong>🎯 Meta do Dia:</strong> Finalizar os 21 dias mantendo o protocolo 16h+ com consciência.<br><strong>⏰ Meta de Jejum:</strong> 16h ou mais</div>
+    <h3>✅ Checklist do Dia</h3>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Mantive meu protocolo personalizado (16h+)</li>
+      <li><span class="checkbox"></span> Ajustei algo para melhorar minha rotina</li>
+      <li><span class="checkbox"></span> Tirei minhas fotos de celebração</li>
+    </ul>
+    <h3>📊 Registro do Jejum</h3>
+    <p><strong>Início:</strong> <input type="text" class="line-input"> h | <strong>Fim:</strong> <input type="text" class="line-input"> h</p>
+    <p><strong>Duração:</strong> <input type="text" class="line-input"> h <input type="text" class="line-input"> min</p>
+    <h3>📝 Meus aprendizados hoje</h3>
+    <div class="notes-area" style="min-height: 70px;" contenteditable="true"></div>
+    <h3>💧 Meta de Água</h3>
+<ul class="checklist">
+    <li><span class="checkbox"></span> Cumpri minha meta de água</li>
+</ul>
+    <div class="celebration">
+      <h3>🎓 PARABÉNS!</h3>
+      <p>Você concluiu a prática dos 21 dias! Na próxima página você fará a <strong>avaliação final</strong> e montará seu <strong>plano de futuro</strong>.</p>
+    </div>
+  </div>
+
+  <div class="page-break"></div>
+
+  <!-- PÓS-PROGRAMA: Avaliação Final & Plano de 12 Meses -->
+  <div class="page">
+    <h1>🎯 PÓS-PROGRAMA: Avaliação Final & Plano de 12 Meses</h1>
+    <div class="goal-box"><strong>Objetivo:</strong> Consolidar seus resultados, planejar os próximos passos e participar das <strong>premiações mensais</strong> por até <strong>12 meses</strong> após o programa.</div>
+
+    <h2>📏 Medidas Finais vs. Iniciais</h2>
+    <div class="stats-grid">
+      <div>
+        <strong>Peso Final:</strong> <input type="text" class="line-input" id="pesoFinal"> kg<br>
+        <em>Inicial (copie da página 1): <input type="text" class="line-input" id="pesoInicialCopia"> kg</em><br>
+        <strong>Diferença:</strong> <input type="text" class="line-input" id="pesoDiferenca"> kg<br><br>
+        <strong>Cintura Final:</strong> <input type="text" class="line-input" id="cinturaFinal"> cm<br>
+        <em>Inicial: <input type="text" class="line-input" id="cinturaInicialCopia"> cm</em><br>
+        <strong>Diferença:</strong> <input type="text" class="line-input" id="cinturaDiferenca"> cm
+      </div>
+      <div>
+        <strong>Quadril Final:</strong> <input type="text" class="line-input" id="quadrilFinal"> cm<br>
+        <em>Inicial: <input type="text" class="line-input" id="quadrilInicialCopia"> cm</em><br>
+        <strong>Diferença:</strong> <input type="text" class="line-input" id="quadrilDiferenca"> cm<br><br>
+        <strong>Outras Finais:</strong> <input type="text" class="line-input" id="outrasFinais"> cm<br>
+        <em>Inicial: <input type="text" class="line-input" id="outrasIniciaisCopia"> cm</em><br>
+        <strong>Diferença:</strong> <input type="text" class="line-input" id="outrasDiferenca"> cm
+      </div>
+    </div>
+
+    <h2>📸 Fotos Finais</h2>
+    <ul class="checklist">
+      <li><span class="checkbox"></span> Foto frontal final tirada</li>
+      <li><span class="checkbox"></span> Foto lateral final tirada</li>
+      <li><span class="checkbox"></span> Foto posterior final tirada</li>
+    </ul>
+
+    <h2>🎯 Resultados Alcançados & Reflexões</h2>
+    <div class="notes-area" style="min-height: 90px;" contenteditable="true" id="reflexoesFinais"></div>
+
+    <h2>🗓️ Plano Futuro</h2>
+    <p><strong>Protocolo que seguirei:</strong> <input type="text" class="line-input" id="protocoloFuturo"> h de jejum</p>
+    <p><strong>Horários preferidos:</strong> <input type="text" class="line-input" id="horaJanelaIni"> h às <input type="text" class="line-input" id="horaJanelaFim"> h</p>
+    <p><strong>Objetivos para os próximos 30-90 dias:</strong></p>
+    <div class="notes-area" style="min-height: 80px;" contenteditable="true" id="objetivos3090"></div>
+
+    <h2>🏆 Premiações – Envio Mensal (por 12 meses)</h2>
+    <p class="muted">Envie seu resultado mensal para continuar participando das premiações por até 1 ano após os 21 dias.</p>
+    <div class="stats-grid">
+      <div>
+        <strong>Mês:</strong> <input type="text" class="line-input" id="monthlyMonth" placeholder="MM">
+        <strong>Ano:</strong> <input type="text" class="line-input" id="monthlyYear" placeholder="AAAA"><br><br>
+        <strong>Peso:</strong> <input type="text" class="line-input" id="monthlyPeso"> kg<br><br>
+        <strong>Cintura:</strong> <input type="text" class="line-input" id="monthlyCintura"> cm
+      </div>
+      <div>
+        <strong>Quadril:</strong> <input type="text" class="line-input" id="monthlyQuadril"> cm<br><br>
+        <strong>Outras (opcional):</strong> <input type="text" class="line-input" id="monthlyOutras"> cm<br><br>
+        <div class="no-print">
+          <button type="button" class="btn btn-wa" id="sendWhatsMonthlyBtn">Enviar resultado do mês via WhatsApp</button>
+          <div class="muted">Anexe as 3 fotos do mês antes de enviar.</div>
+        </div>
+      </div>
+    </div>
+    <p><strong>Notas do mês:</strong></p>
+    <div class="notes-area" id="monthlyNotas" style="min-height: 70px;" contenteditable="true"></div>
+  </div>
+
+  <script>
+    // ====== Config ======
+    const WHATS_NUMBER = '16153304647'; // +1 615 330 4647
+    const STORAGE_KEY = 'tracker21_v2_' + (location.pathname || 'default');
+
+    // ====== Util ======
+    function setStatus(text){ const el = document.getElementById('saveStatus'); if(el) el.textContent = text; }
+    function debounce(fn, delay){ let t; return function(){ const a=arguments; clearTimeout(t); t=setTimeout(()=>fn.apply(this,a), delay); }; }
+
+    // ====== Checkbox editável ======
+    function toggleCheckbox(el){
+      const isChecked = el.getAttribute('data-checked') === 'true';
+      el.setAttribute('data-checked', String(!isChecked));
+      el.setAttribute('aria-checked', String(!isChecked));
+      saveStateDebounced();
+    }
+    function makeCheckboxesInteractive(){
+      document.querySelectorAll('.checkbox').forEach((el)=>{
+        if(!el.hasAttribute('role')){
+          el.setAttribute('role','checkbox');
+          el.setAttribute('tabindex','0');
+          el.setAttribute('aria-checked', el.getAttribute('data-checked')==='true' ? 'true' : 'false');
+        }
+        el.addEventListener('click', ()=> toggleCheckbox(el));
+        el.addEventListener('keydown', (ev)=>{ if(ev.key===' '||ev.key==='Enter'){ ev.preventDefault(); toggleCheckbox(el);} });
+      });
+    }
+
+    // ====== Persistência ======
+    function collectPersistables(){
+      return Array.from(document.querySelectorAll('input[type="text"], textarea, .notes-area[contenteditable], .checkbox'));
+    }
+    function ensureKeys(){
+      const els = collectPersistables();
+      els.forEach((el, i)=>{ if(!el.dataset.key) el.dataset.key = 'k'+i; });
+    }
+    function saveState(){
+      try{
+        setStatus('salvando...');
+        const data = {};
+        collectPersistables().forEach(el=>{
+          const k = el.dataset.key; if(!k) return;
+          if(el.classList.contains('checkbox')){
+            data[k] = (el.getAttribute('data-checked')==='true');
+          } else if(el.isContentEditable){
+            data[k] = { html: el.innerHTML };
+          } else if(el.tagName==='INPUT' || el.tagName==='TEXTAREA'){
+            data[k] = el.value;
+          }
+        });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+        setTimeout(()=>setStatus('(salvo)'), 300);
+      }catch(e){ console.warn('Falha ao salvar', e); setStatus('(erro ao salvar)'); }
+    }
+    const saveStateDebounced = debounce(saveState, 500);
+
+    function loadState(){
+      try{
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if(!raw) { makeCheckboxesInteractive(); return; }
+        const data = JSON.parse(raw);
+        collectPersistables().forEach(el=>{
+          const k = el.dataset.key; if(!k) return; const v = data[k]; if(v==null) return;
+          if(el.classList.contains('checkbox')){
+            el.setAttribute('data-checked', String(!!v));
+            el.setAttribute('aria-checked', String(!!v));
+          } else if(el.isContentEditable && v && typeof v==='object' && 'html' in v){
+            el.innerHTML = v.html;
+          } else if(el.tagName==='INPUT' || el.tagName==='TEXTAREA'){
+            el.value = v;
+          }
+        });
+        makeCheckboxesInteractive();
+        setStatus('(salvo)');
+      }catch(e){ console.warn('Falha ao carregar', e); makeCheckboxesInteractive(); }
+    }
+
+    // ====== Backup / Import / Download ======
+    function exportJSON(){
+      const data = localStorage.getItem(STORAGE_KEY) || '{}';
+      const blob = new Blob([data], {type:'application/json'});
+      const a = document.createElement('a');
+      const now = new Date();
+      const fname = `tracker-21-dias-backup-${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-${String(now.getDate()).padStart(2,'0')}.json`;
+      a.href = URL.createObjectURL(blob); a.download = fname; a.click();
+      setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+    }
+    function handleImportFile(ev){
+      const file = ev.target.files && ev.target.files[0]; if(!file) return;
+      const reader = new FileReader();
+      reader.onload = function(){
+        try{ localStorage.setItem(STORAGE_KEY, String(reader.result)); loadState(); alert('Backup importado com sucesso!'); }
+        catch(e){ alert('Não foi possível importar.'); }
+        finally{ ev.target.value=''; }
+      };
+      reader.readAsText(file);
+    }
+    function clearData(){ if(confirm('Tem certeza que deseja limpar todos os dados salvos neste navegador?')){ localStorage.removeItem(STORAGE_KEY); location.reload(); } }
+    function downloadFilledHTML(){
+      try{
+        const clone = document.documentElement.cloneNode(true);
+        clone.querySelectorAll('input, textarea').forEach(el=>{ el.setAttribute('value', el.value || ''); });
+        const html = '<!DOCTYPE html>\n' + clone.outerHTML;
+        const blob = new Blob([html], {type:'text/html'});
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'tracker-21-dias-preenchido.html'; a.click();
+        setTimeout(()=>URL.revokeObjectURL(a.href), 1000);
+      }catch(e){ alert('Não foi possível gerar o arquivo HTML.'); }
+    }
+
+    // ====== WhatsApp ======
+    function buildAutoMessage(){
+      const di = (document.getElementById('startDay')?.value||'dd') + '/' + (document.getElementById('startMonth')?.value||'mm') + '/' + (document.getElementById('startYear')?.value||'aaaa');
+      const p = document.getElementById('pesoInicial')?.value; const c = document.getElementById('cinturaInicial')?.value; const q = document.getElementById('quadrilInicial')?.value;
+      const b = document.getElementById('bracoInicial')?.value; const cx = document.getElementById('coxaInicial')?.value; const o = document.getElementById('outrasIniciais')?.value;
+      const obj = (document.getElementById('objetivosIniciais')?.innerText||'').trim();
+      const mot = (document.getElementById('motivacoesIniciais')?.innerText||'').trim();
+      const sen = (document.getElementById('sentimentoInicial')?.innerText||'').trim();
+
+      const linhas = [];
+      linhas.push('📩 Envio de medidas iniciais – Jejum 21 dias');
+      linhas.push('Data de início: ' + di);
+      if(p) linhas.push('⚖️ Peso: ' + p + ' kg');
+      const medidas = [];
+      if(c) medidas.push('Cintura ' + c + ' cm');
+      if(q) medidas.push('Quadril ' + q + ' cm');
+      if(b) medidas.push('Braço ' + b + ' cm');
+      if(cx) medidas.push('Coxa ' + cx + ' cm');
+      if(o) medidas.push('Outras ' + o + ' cm');
+      if(medidas.length) linhas.push('📏 Medidas: ' + medidas.join(' | '));
+      if(obj) linhas.push('🎯 Objetivos: ' + obj.replace(/\n/g,' '));
+      if(mot) linhas.push('🔥 Motivação: ' + mot.replace(/\n/g,' '));
+      if(sen) linhas.push('📝 Como me sinto: ' + sen.replace(/\n/g,' '));
+      linhas.push('');
+      linhas.push('📸 Anexarei as 3 fotos (frente, lateral e costas).');
+      return linhas.join('\n');
+    }
+    function sendWhatsQuick(){ const text = buildAutoMessage(); const url = 'https://wa.me/' + WHATS_NUMBER + '?text=' + encodeURIComponent(text); window.open(url, '_blank'); }
+
+    // Envio mensal (premiações)
+    function buildMonthlyMessage(){
+      const mes = document.getElementById('monthlyMonth')?.value; const ano = document.getElementById('monthlyYear')?.value;
+      const peso = document.getElementById('monthlyPeso')?.value; const cin = document.getElementById('monthlyCintura')?.value; const qua = document.getElementById('monthlyQuadril')?.value; const out = document.getElementById('monthlyOutras')?.value;
+      const notas = (document.getElementById('monthlyNotas')?.innerText||'').trim();
+      const linhas = [];
+      linhas.push('🏆 Envio para premiações – ' + (mes||'MM') + '/' + (ano||'AAAA'));
+      if(peso) linhas.push('⚖️ Peso: ' + peso + ' kg');
+      const medidas = [];
+      if(cin) medidas.push('Cintura ' + cin + ' cm');
+      if(qua) medidas.push('Quadril ' + qua + ' cm');
+      if(out) medidas.push('Outras ' + out + ' cm');
+      if(medidas.length) linhas.push('📏 Medidas: ' + medidas.join(' | '));
+      if(notas) linhas.push('📝 Notas: ' + notas.replace(/\n/g,' '));
+      linhas.push('');
+      linhas.push('📸 Anexarei as 3 fotos do mês (frente, lateral e costas).');
+      return linhas.join('\n');
+    }
+    function sendWhatsMonthly(){ const text = buildMonthlyMessage(); const url = 'https://wa.me/' + WHATS_NUMBER + '?text=' + encodeURIComponent(text); window.open(url, '_blank'); }
+    function seedMonthlyDefaults(){ const now = new Date(); const m = String(now.getMonth()+1).padStart(2,'0'); const y = String(now.getFullYear()); const mm = document.getElementById('monthlyMonth'); const yy = document.getElementById('monthlyYear'); if(mm && !mm.value) mm.value = m; if(yy && !yy.value) yy.value = y; }
+
+    // ====== Inicialização ======
+    function initialize(){
+      ensureKeys();
+      loadState();
+      // auto-save
+      document.querySelectorAll('input[type="text"], textarea').forEach(el=> el.addEventListener('input', saveStateDebounced));
+      document.querySelectorAll('.notes-area[contenteditable]').forEach(el=> el.addEventListener('input', saveStateDebounced));
+      // Toolbar
+      document.getElementById('exportJSONBtn')?.addEventListener('click', exportJSON);
+      document.getElementById('importJSONBtn')?.addEventListener('click', ()=> document.getElementById('importFile')?.click());
+      document.getElementById('importFile')?.addEventListener('change', handleImportFile);
+      document.getElementById('downloadHTMLBtn')?.addEventListener('click', downloadFilledHTML);
+      document.getElementById('clearDataBtn')?.addEventListener('click', clearData);
+      // WhatsApp
+      document.getElementById('sendWhatsQuickBtn')?.addEventListener('click', sendWhatsQuick);
+      document.getElementById('sendWhatsMonthlyBtn')?.addEventListener('click', sendWhatsMonthly);
+      // Pós-programa defaults
+      seedMonthlyDefaults();
+    }
+
+    document.addEventListener('DOMContentLoaded', initialize);
+  </script>
+</body>
+</html>
