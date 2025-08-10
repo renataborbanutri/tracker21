@@ -16,11 +16,11 @@
     body { font-family: Arial, sans-serif; line-height: 1.3; color: #333; background: #fff; font-size: 12px; }
     .page { min-height: 260mm; padding: 15mm; box-sizing: border-box; }
 
-    h1 { color: #2c5aa0; text-align: center; margin-bottom: 15px; font-size: 20px; border-bottom: 3px solid #ff6b35; padding-bottom: 8px; }
+    h1 { color: #7B1E3C; text-align: center; margin-bottom: 15px; font-size: 20px; border-bottom: 3px solid #ff6b35; padding-bottom: 8px; }
     h2 { color: #ff6b35; margin-top: 20px; margin-bottom: 12px; font-size: 16px; }
-    h3 { color: #2c5aa0; margin-top: 15px; margin-bottom: 8px; font-size: 13px; }
+    h3 { color: #7B1E3C; margin-top: 15px; margin-bottom: 8px; font-size: 13px; }
 
-    .goal-box { background: #e8f4f8; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 4px solid #2c5aa0; font-size: 11px; }
+    .goal-box { background: #e8f4f8; padding: 12px; border-radius: 6px; margin: 12px 0; border-left: 4px solid #7B1E3C; font-size: 11px; }
 
     .checklist { list-style: none; padding: 0; margin: 8px 0; }
     .checklist li { margin: 6px 0; font-size: 11px; }
@@ -29,7 +29,7 @@
     .checkbox { display: inline-flex; width: 14px; height: 14px; border: 1px solid #333; margin-right: 6px; vertical-align: middle; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
     .checkbox::after { content: 'X'; font-weight: bold; font-size: 12px; line-height: 1; opacity: 0; transition: opacity .12s ease; }
     .checkbox[data-checked="true"]::after { opacity: 1; }
-    .checkbox:focus { outline: 2px solid #2c5aa0; outline-offset: 1px; }
+    .checkbox:focus { outline: 2px solid #7B1E3C; outline-offset: 1px; }
 
     .water-track { display: flex; gap: 4px; margin: 8px 0; flex-wrap: wrap; }
     .water-cup { width: 16px; height: 16px; border: 1px solid #4a90e2; display: inline-block; }
@@ -38,7 +38,7 @@
     .line-input.wide { min-width: 160px; }
 
     .notes-area { border: 1px solid #ccc; min-height: 50px; padding: 6px; margin: 8px 0; background: #fafafa; }
-    .notes-area[contenteditable="true"]:focus { outline: none; border-color: #2c5aa0; box-shadow: 0 0 0 2px rgba(44, 90, 160, 0.1); background: #fff; }
+    .notes-area[contenteditable="true"]:focus { outline: none; border-color: #7B1E3C; box-shadow: 0 0 0 2px rgba(44, 90, 160, 0.1); background: #fff; }
 
     .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
 
@@ -51,13 +51,67 @@
     /* Botões */
     .btn { display: inline-block; border: 0; border-radius: 6px; padding: 8px 12px; font-size: 12px; cursor: pointer; margin-right: 8px; margin-bottom: 8px; }
     .btn-wa { background: #25D366; color: #fff; }
-    .btn-ghost { background: #eef3ff; color: #2c5aa0; }
+    .btn-ghost { background: #eef3ff; color: #7B1E3C; }
     .muted { color: #555; font-size: 11px; }
 
     /* Toolbar de dados (não imprime) */
     .data-toolbar { border:1px solid #e5e7eb; background:#f9fafb; padding:10px 12px; border-radius:8px; max-width:210mm; margin:10px auto 0; box-shadow:0 1px 3px rgba(0,0,0,.04) }
     .data-toolbar .btn{ margin-right:6px; margin-bottom:6px }
     .data-toolbar .muted{ font-size:11px }
+
+/* ——— CAPA ——— */
+.cover-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 260mm;
+  text-align: center;
+  gap: 12px;
+}
+.cover-logo {
+  width: 120px;
+  height: auto;
+  margin-bottom: 6px;
+}
+.cover-title {
+  font-size: clamp(24px, 5vw, 42px);
+  color: #7B1E3C;
+  line-height: 1.15;
+  margin: 6px 0;
+}
+.cover-subtitle {
+  font-size: clamp(14px, 2.6vw, 20px);
+  color: #ff6b35;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+.cover-badge {
+  display: inline-block;
+  padding: 6px 10px;
+  border: 1px solid #7B1E3C;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #7B1E3C;
+  margin-top: 8px;
+}
+.cover-meta {
+  margin-top: 14px;
+  font-size: 12px;
+  color: #444;
+}
+
+/* ——— RODAPÉ EM TODAS AS PÁGINAS ——— */
+.page { position: relative; padding-bottom: 28mm; } /* dá espaço pro rodapé */
+.page::after{
+  content: "Todos os direitos de criação são de Renata Borba Nutricionista CRN 21102962";
+  position: absolute;
+  left: 15mm; right: 15mm; bottom: 8mm;
+  text-align: center;
+  font-size: 10px;
+  color: #777;
+}
+
   </style>
 </head>
 <body>
@@ -76,6 +130,27 @@
     </div>
   </div>-->
 
+<!-- CAPA -->
+<div class="page cover-page">
+  <img src="logo.png" alt="Renata Borba Nutri - Logo" class="cover-logo">
+  <div class="cover-badge">Tracker de Jejum Intermitente — 21 dias</div>
+  <h1 class="cover-title">Jejum Acelerador Feminino</h1>
+  <div class="cover-subtitle">Transformação Acelerada Totalmente Acompanhada</div>
+
+  <!-- (opcional) campos para personalizar a capa -->
+  <div class="cover-meta">
+    <div><strong>Nome:</strong> <input type="text" class="line-input" placeholder=""></div>
+    <div style="margin-top:6px;"><strong>Data de início:</strong>
+      <input type="text" class="line-input" placeholder=""> /
+      <input type="text" class="line-input" placeholder=""> /
+      <input type="text" class="line-input" placeholder="">
+    </div>
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+
   <!-- PÁGINA INICIAL -->
   <div class="page">
     <h1>🥗 TRACKER DE JEJUM INTERMITENTE - 21 DIAS</h1>
@@ -84,9 +159,9 @@
 
     <div class="date-line">
       <strong>Data de Início:</strong>
-      <input type="text" class="line-input" id="startDay" placeholder="dd"> /
-      <input type="text" class="line-input" id="startMonth" placeholder="mm"> /
-      <input type="text" class="line-input" id="startYear" placeholder="aaaa">
+      <input type="text" class="line-input" id="startDay" placeholder=""> /
+      <input type="text" class="line-input" id="startMonth" placeholder=""> /
+      <input type="text" class="line-input" id="startYear" placeholder="">
     </div>
 
     <h3>📏 Medidas Iniciais</h3>
